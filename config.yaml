@@ -1,0 +1,11 @@
+# CV Spine — Default configuration
+mqtt_broker: "localhost"
+mqtt_port: 1883
+redis_url: "redis://localhost:6379"
+db_url: "postgresql://spine:spine_dev_password@localhost:5432/cvspine"
+gpu_device: "auto"
+
+cameras: []
+zones: []
+lines: []
+galleries: []

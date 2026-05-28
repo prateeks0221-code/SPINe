@@ -1,0 +1,64 @@
+venue_name: Demo Room
+capacity: 6
+cameras:
+- id: cam-main
+  source: https://192.168.0.103:4343/video
+  detection:
+    model: yolov8m
+    confidence: 0.35
+  pose:
+    model: yolov8m-pose
+    fps: 2.0
+  reid:
+    enabled: true
+    gallery_ttl: 14400
+    similarity_threshold: 0.65
+    ema_alpha: 0.3
+    min_samples: 3
+  entry_exit: true
+  roi: true
+  stream: true
+zones:
+- id: room-main
+  camera_id: cam-main
+  type: polygon
+  points:
+  - - 0
+    - 200
+  - - 900
+    - 200
+  - - 900
+    - 888
+  - - 0
+    - 888
+  alerts:
+  - condition: count > 5
+    event: zone.overcrowded
+    cooldown: 60
+  analytics:
+    heatmap: true
+    dwell: true
+- id: doorway
+  camera_id: cam-main
+  type: polygon
+  points:
+  - - 1020
+    - 180
+  - - 1222
+    - 180
+  - - 1222
+    - 750
+  - - 1020
+    - 750
+  analytics:
+    dwell: true
+lines:
+- id: entry/exit
+  camera_id: cam-main
+  type: entry_exit
+  points:
+  - - 424
+    - 48
+  - - 437
+    - 476
+  direction_in: right

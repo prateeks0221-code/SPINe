@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cv-spine"
+version = "0.1.0"
+description = "Universal Computer Vision Pipeline — build once, deploy everywhere"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24",
+    "opencv-python-headless>=4.8",
+    "pydantic>=2.0",
+    "pydantic-settings>=2.0",
+    "paho-mqtt>=2.0",
+    "redis>=5.0",
+    "ultralytics>=8.2",
+    "onnxruntime-gpu>=1.17",
+    "qdrant-client>=1.9",
+    "supervision>=0.21",
+    "imagehash>=4.3",
+    "prometheus-client>=0.20",
+    "fastapi>=0.111",
+    "uvicorn[standard]>=0.29",
+    "psycopg2-binary>=2.9",
+    "sqlalchemy>=2.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.4",
+    "mypy>=1.10",
+]
+triton = [
+    "tritonclient[all]>=2.45",
+]
+edge = [
+    "onnxruntime>=1.17",
+    "tflite-runtime>=2.16",
+]
+
+[tool.setuptools.packages.find]
+include = ["spine*", "products*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true

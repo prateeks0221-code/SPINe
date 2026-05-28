@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CV Spine — VibeCheck Live</title>
+<style>
+:root{--bg:#05050a;--s1:#0c0c16;--s2:#13132a;--s3:#1a1a36;--br:#252548;--tx:#dde;--mt:#6a6a90;--ac:#8b5cf6;--a2:#06d6a0;--rd:#ef4444;--or:#f59e0b;--gn:#22c55e;--bl:#3b82f6;--cy:#06b6d4;--pk:#ec4899}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--tx);font-family:'Inter','Segoe UI',system-ui,sans-serif;overflow-x:hidden}
+
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--s1);border-bottom:1px solid var(--br)}
+.hdr h1{font-size:1.15rem;font-weight:800;background:linear-gradient(135deg,var(--ac),var(--cy),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hdr .st{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--mt)}
+.hdr .dot{width:7px;height:7px;border-radius:50%;background:var(--gn);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.top{display:grid;grid-template-columns:1fr 2.2fr 1fr;gap:12px;padding:12px 20px}
+.mid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;padding:0 20px 12px}
+.bot{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:0 20px 20px}
+@media(max-width:1100px){.top,.mid,.bot{grid-template-columns:1fr}}
+
+.c{background:var(--s1);border:1px solid var(--br);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden}
+.c:hover{border-color:#3a3a60}
+.lbl{font-size:.65rem;text-transform:uppercase;color:var(--mt);letter-spacing:1.2px;font-weight:700;margin-bottom:2px}
+.val{font-size:1.8rem;font-weight:800;letter-spacing:-1px;line-height:1.1}
+.sub{font-size:.72rem;color:var(--mt);margin-top:3px}
+
+.vibe-card{border-left:3px solid var(--ac);display:flex;flex-direction:column;justify-content:center}
+.vibe-n{font-size:4rem;font-weight:900;letter-spacing:-3px;line-height:.9;transition:color .5s}
+.vibe-tag{display:inline-block;margin-top:6px;padding:3px 12px;border-radius:14px;font-size:.8rem;font-weight:700;background:linear-gradient(135deg,var(--ac),var(--cy));color:#fff}
+.vibe-bar{width:100%;height:6px;background:var(--s3);border-radius:3px;margin-top:10px;overflow:hidden}
+.vibe-fill{height:100%;border-radius:3px;transition:width .6s ease;background:linear-gradient(90deg,var(--bl),var(--ac),var(--pk),var(--rd))}
+.vibe-breakdown{margin-top:8px;font-size:.65rem;color:var(--mt)}
+.vibe-breakdown span{color:var(--a2);font-weight:700}
+
+.vid-wrap{position:relative;border-radius:10px;overflow:hidden;background:#000;line-height:0}
+.vid-wrap img{width:100%;display:block}
+.vid-live{position:absolute;top:8px;right:8px;background:rgba(239,68,68,.85);padding:2px 10px;border-radius:6px;font-size:.68rem;font-weight:700;color:#fff;letter-spacing:1px}
+.vid-fps{position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,.7);padding:2px 8px;border-radius:5px;font-size:.68rem;color:var(--a2)}
+
+.flow-row{display:flex;gap:16px;margin:6px 0 8px}
+.flow-in{color:var(--gn)}
+.flow-out{color:var(--rd)}
+.flow-num{font-size:1.6rem;font-weight:800;line-height:1}
+.flow-lbl{font-size:.6rem;text-transform:uppercase;letter-spacing:1px}
+
+.ring-wrap{width:76px;height:76px;margin:4px auto;position:relative;display:flex;align-items:center;justify-content:center}
+.ring-wrap svg{position:absolute;transform:rotate(-90deg)}
+.ring-pct{font-size:1.1rem;font-weight:800}
+
+.ebar{width:100%;height:18px;background:var(--s3);border-radius:9px;overflow:hidden;margin-top:6px;position:relative}
+.efill{height:100%;border-radius:9px;transition:width .4s;background:linear-gradient(90deg,var(--bl),var(--a2),var(--or),var(--rd))}
+.elbl{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+
+.sr{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--br);font-size:.75rem}
+.sr:last-child{border:none}
+.sr .k{color:var(--mt)}
+.sr .v{font-weight:700}
+
+.alert-list{max-height:100%;overflow-y:auto}
+.ai{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--s2);border-radius:7px;margin-bottom:5px;border-left:3px solid var(--or);font-size:.75rem;animation:aIn .3s ease}
+.ai.crit{border-left-color:var(--rd)}
+.ab{padding:1px 7px;border-radius:5px;font-size:.6rem;font-weight:700;text-transform:uppercase;background:var(--or);color:#000;flex-shrink:0}
+.ai.crit .ab{background:var(--rd);color:#fff}
+.at{color:var(--mt);font-size:.65rem;margin-left:auto;flex-shrink:0}
+@keyframes aIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+
+.chart-box{height:100px}
+canvas{width:100%!important;height:100%!important}
+
+.hm-grid{display:grid;grid-template-columns:repeat(32,1fr);gap:1px;border-radius:6px;overflow:hidden;aspect-ratio:16/9}
+.hm-cell{aspect-ratio:1;border-radius:1px;transition:background .4s}
+
+.perf{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.pill{padding:2px 8px;border-radius:6px;font-size:.65rem;font-weight:600;background:var(--s3);color:var(--mt)}
+.pill b{color:var(--a2)}
+
+/* Line Editor Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--s1);border:1px solid var(--br);border-radius:16px;padding:20px;width:90vw;max-width:900px;max-height:90vh;overflow-y:auto}
+.modal h2{font-size:1rem;font-weight:700;margin-bottom:12px;color:var(--a2)}
+.modal .close-btn{position:absolute;top:12px;right:16px;background:none;border:none;color:var(--mt);font-size:1.4rem;cursor:pointer}
+.line-editor-wrap{position:relative;display:inline-block;width:100%}
+.line-editor-wrap img{width:100%;border-radius:8px;display:block}
+.line-editor-wrap svg{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair}
+.le-controls{display:flex;gap:12px;margin-top:12px;align-items:center;flex-wrap:wrap}
+.le-controls label{font-size:.75rem;color:var(--mt)}
+.le-controls select,.le-controls input{background:var(--s2);border:1px solid var(--br);color:var(--tx);padding:4px 8px;border-radius:6px;font-size:.75rem}
+.btn{padding:6px 16px;border-radius:8px;border:none;font-weight:700;font-size:.75rem;cursor:pointer;transition:all .2s}
+.btn-primary{background:var(--a2);color:#000}.btn-primary:hover{opacity:.85}
+.btn-danger{background:var(--rd);color:#fff}.btn-danger:hover{opacity:.85}
+.btn-ghost{background:var(--s3);color:var(--mt)}.btn-ghost:hover{color:var(--tx)}
+.line-edit-btn{position:absolute;top:8px;left:8px;z-index:5;padding:4px 10px;border-radius:6px;background:rgba(0,0,0,.7);border:1px solid var(--br);color:var(--or);font-size:.68rem;font-weight:700;cursor:pointer}
+.line-edit-btn:hover{background:rgba(245,158,11,.2)}
+.le-info{margin-top:8px;font-size:.7rem;color:var(--mt);line-height:1.4}
+.le-info b{color:var(--or)}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <h1>CV SPINE &mdash; VibeCheck</h1>
+  <div class="st"><div class="dot"></div><span id="stxt">Connecting...</span>&nbsp;&nbsp;|&nbsp;&nbsp;Uptime: <b id="up">0s</b></div>
+</div>
+
+<!-- TOP: VIBE | VIDEO | ALERTS -->
+<div class="top">
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div class="c vibe-card">
+      <div class="lbl">Vibe Score</div>
+      <div class="vibe-n" id="vs" style="color:var(--ac)">0</div>
+      <div class="vibe-tag" id="vl">—</div>
+      <div class="vibe-bar"><div class="vibe-fill" id="vf" style="width:0"></div></div>
+      <div class="vibe-breakdown" id="vb">Occ: <span>0</span> | Energy: <span>0</span> | Arms: <span>0</span> | Activity: <span>0</span></div>
+    </div>
+    <div class="c" style="border-left:3px solid var(--a2)">
+      <div class="lbl">Dance Energy</div>
+      <div class="val" id="de" style="color:var(--a2)">0%</div>
+      <div class="ebar"><div class="efill" id="ef" style="width:0"></div><div class="elbl" id="el">0%</div></div>
+      <div style="margin-top:10px">
+        <div class="sr"><span class="k">Unique Visitors</span><span class="v" id="uv">0</span></div>
+        <div class="sr"><span class="k">ReID Matches</span><span class="v" id="rm">0</span></div>
+        <div class="sr"><span class="k">Arm Raise %</span><span class="v" id="armP" style="color:var(--pk)">0%</span></div>
+        <div class="sr"><span class="k">Avg Speed</span><span class="v" id="spdV" style="color:var(--bl)">0</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIDEO FEED -->
+  <div class="c" style="padding:6px">
+    <div class="vid-wrap">
+      <img id="vfeed" src="/video_feed" alt="Live">
+      <div class="vid-live">● REC</div>
+      <div class="vid-fps" id="vfps">-- fps</div>
+      <button class="line-edit-btn" onclick="openLineEditor()">⚙ Edit Gate Lines</button>
+    </div>
+    <div class="perf">
+      <div class="pill">Det: <b id="dms">0</b>ms</div>
+      <div class="pill">Pose: <b id="pms">0</b>ms</div>
+      <div class="pill">FPS: <b id="fps2">0</b></div>
+      <div class="pill">Frames: <b id="fn">0</b></div>
+      <div class="pill">Events: <b id="ev">0</b></div>
+    </div>
+  </div>
+
+  <!-- ALERTS -->
+  <div class="c" style="border-left:3px solid var(--rd);display:flex;flex-direction:column">
+    <div class="lbl" style="margin-bottom:6px">Live Alerts</div>
+    <div class="alert-list" id="abox" style="flex:1;overflow-y:auto">
+      <div style="color:var(--mt);text-align:center;padding:30px 0;font-size:.78rem">Monitoring...</div>
+    </div>
+  </div>
+</div>
+
+<!-- MID: KPI CARDS -->
+<div class="mid">
+  <div class="c" style="border-left:3px solid var(--cy)">
+    <div class="lbl">People Now</div>
+    <div class="val" id="pc" style="color:var(--cy)">0</div>
+    <div class="sub">Peak: <b id="pk">0</b> &nbsp;|&nbsp; Tracks: <b id="at">0</b></div>
+    <div class="ring-wrap">
+      <svg width="76" height="76" viewBox="0 0 76 76">
+        <circle cx="38" cy="38" r="32" fill="none" stroke="var(--s3)" stroke-width="5"/>
+        <circle id="oR" cx="38" cy="38" r="32" fill="none" stroke="var(--cy)" stroke-width="5" stroke-dasharray="201" stroke-dashoffset="201" stroke-linecap="round"/>
+      </svg>
+      <span class="ring-pct" id="oP">0%</span>
+    </div>
+    <div style="text-align:center;font-size:.65rem;color:var(--mt)">of <span id="cap">200</span> capacity</div>
+  </div>
+
+  <div class="c" style="border-left:3px solid var(--or)">
+    <div class="lbl">Flow</div>
+    <div class="flow-row">
+      <div class="flow-in"><div class="flow-lbl">◀ Entries</div><div class="flow-num" id="ei">0</div></div>
+      <div class="flow-out"><div class="flow-lbl">▶ Exits</div><div class="flow-num" id="eo">0</div></div>
+    </div>
+    <div class="sr"><span class="k">Net Inside</span><span class="v" id="net" style="color:var(--a2)">0</span></div>
+    <div class="sr"><span class="k">Standing %</span><span class="v" id="stdP" style="color:var(--gn)">0%</span></div>
+    <div class="sr"><span class="k">Body Angle</span><span class="v" id="baV">0°</span></div>
+  </div>
+
+  <div class="c" style="border-left:3px solid var(--bl)">
+    <div class="lbl">Inference Performance</div>
+    <div class="chart-box"><canvas id="cFps"></canvas></div>
+  </div>
+
+  <div class="c" style="border-left:3px solid var(--pk)">
+    <div class="lbl">Pipeline Health</div>
+    <div style="margin-top:6px">
+      <div class="sr"><span class="k">Camera</span><span class="v" style="color:var(--gn)">● Online</span></div>
+      <div class="sr"><span class="k">Detection</span><span class="v" id="hDet" style="color:var(--gn)">● <span id="hDetMs">0</span>ms</span></div>
+      <div class="sr"><span class="k">Pose</span><span class="v" id="hPose" style="color:var(--gn)">● <span id="hPoseMs">0</span>ms</span></div>
+      <div class="sr"><span class="k">Tracker</span><span class="v" style="color:var(--gn)">● Active</span></div>
+      <div class="sr"><span class="k">ReID</span><span class="v" style="color:var(--a2)">● Stub</span></div>
+      <div class="sr"><span class="k">GPU</span><span class="v" style="color:var(--or)">CPU mode</span></div>
+      <div class="sr"><span class="k">Frame Drop</span><span class="v">0%</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM: CHARTS + HEATMAP -->
+<div class="bot">
+  <div class="c">
+    <div class="lbl">People Count — 3 min</div>
+    <div class="chart-box"><canvas id="cPpl"></canvas></div>
+  </div>
+  <div class="c">
+    <div class="lbl">Vibe + Energy — 3 min</div>
+    <div class="chart-box"><canvas id="cVib"></canvas></div>
+  </div>
+  <div class="c">
+    <div class="lbl">Spatial Heatmap</div>
+    <div class="hm-grid" id="hm"></div>
+  </div>
+</div>
+
+<!-- LINE EDITOR MODAL -->
+<div class="modal-overlay" id="lineModal">
+  <div class="modal" style="position:relative">
+    <button class="close-btn" onclick="closeLineEditor()" style="position:absolute;top:12px;right:16px;background:none;border:none;color:var(--mt);font-size:1.4rem;cursor:pointer">&times;</button>
+    <h2>⚙ Entry/Exit Line Editor</h2>
+    <p style="font-size:.75rem;color:var(--mt);margin-bottom:10px">Click two points on the image to draw a gate line. Person crossing in the arrow direction = Entry.</p>
+    <div class="line-editor-wrap" id="leWrap">
+      <img id="leImg" src="/video_feed" alt="Frame">
+      <svg id="leSvg" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div class="le-controls">
+      <label>Line ID: <input id="leId" value="main-entrance" style="width:120px"></label>
+      <label>Direction IN:
+        <select id="leDir">
+          <option value="left">◀ Left</option>
+          <option value="right">▶ Right</option>
+          <option value="up">▲ Up</option>
+          <option value="down">▼ Down</option>
+        </select>
+      </label>
+      <button class="btn btn-ghost" onclick="clearLinePoints()">Clear</button>
+      <button class="btn btn-primary" onclick="saveLine()">Save & Apply</button>
+      <span id="leStat" style="font-size:.72rem;color:var(--mt)"></span>
+    </div>
+    <div class="le-info">
+      <b>P1:</b> <span id="leP1">—</span> &nbsp; <b>P2:</b> <span id="leP2">—</span><br>
+      Click on frame to set points. Line shows live preview. Save writes to config and reloads pipeline instantly.
+    </div>
+    <div id="leLines" style="margin-top:10px"></div>
+  </div>
+</div>
+
+<script>
+// Sparkline chart
+class Spark{
+  constructor(el,cols,mx='auto'){this.c=el.getContext('2d');this.el=el;this.cols=cols;this.mx=mx;this.ds=cols.map(()=>[])}
+  update(d){this.ds=d;this.draw()}
+  draw(){
+    const c=this.c,W=this.el.width=this.el.offsetWidth*2,H=this.el.height=this.el.offsetHeight*2;
+    c.clearRect(0,0,W,H);
+    let M=this.mx==='auto'?Math.max(1,...this.ds.flat()):this.mx;
+    this.ds.forEach((d,di)=>{
+      if(d.length<2)return;const col=this.cols[di];
+      const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,col+'35');g.addColorStop(1,col+'05');
+      c.beginPath();c.moveTo(0,H);
+      d.forEach((v,i)=>{const x=i/(d.length-1)*W,y=H-(v/M)*(H-8)-4;i?c.lineTo(x,y):c.lineTo(x,y)});
+      c.lineTo(W,H);c.closePath();c.fillStyle=g;c.fill();
+      c.beginPath();d.forEach((v,i)=>{const x=i/(d.length-1)*W,y=H-(v/M)*(H-8)-4;i?c.lineTo(x,y):c.moveTo(x,y)});
+      c.strokeStyle=col;c.lineWidth=2.5;c.lineCap='round';c.stroke();
+      const lv=d[d.length-1],ly=H-(lv/M)*(H-8)-4;
+      c.beginPath();c.arc(W,ly,4,0,Math.PI*2);c.fillStyle=col;c.fill();
+      c.beginPath();c.arc(W,ly,7,0,Math.PI*2);c.fillStyle=col+'30';c.fill();
+    })
+  }
+}
+const cPpl=new Spark(document.getElementById('cPpl'),['#06b6d4']);
+const cVib=new Spark(document.getElementById('cVib'),['#8b5cf6','#06d6a0'],100);
+const cFps=new Spark(document.getElementById('cFps'),['#3b82f6']);
+
+// Heatmap cells
+const hmEl=document.getElementById('hm');
+for(let i=0;i<32*18;i++){const d=document.createElement('div');d.className='hm-cell';d.style.background='var(--s2)';hmEl.appendChild(d)}
+function hc(v){
+  if(v<.1)return'rgba(12,12,22,1)';
+  if(v<.25)return`rgba(59,130,246,${v*2})`;
+  if(v<.45)return`rgba(6,214,160,${v+.2})`;
+  if(v<.65)return`rgba(245,158,11,${v+.2})`;
+  return`rgba(239,68,68,${Math.min(v+.3,1)})`
+}
+
+function fmtUp(s){const h=s/3600|0,m=(s%3600)/60|0,sec=s%60;return h?`${h}h${m}m`:m?`${m}m${sec}s`:`${sec}s`}
+function num(n){return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n.toLocaleString()}
+
+// ── LINE EDITOR ──
+let FRAME_W=1222, FRAME_H=888;
+let lePoints=[];
+let existingLines=[];
+
+function openLineEditor(){
+  document.getElementById('lineModal').classList.add('open');
+  fetch('/api/lines').then(r=>r.json()).then(d=>{
+    FRAME_W=d.frame_w||1222;
+    FRAME_H=d.frame_h||888;
+    existingLines=d.lines||[];
+    renderExistingLines();
+    if(existingLines.length>0){
+      const l=existingLines[0];
+      document.getElementById('leId').value=l.id||'main-entrance';
+      document.getElementById('leDir').value=l.direction_in||'left';
+      if(l.points&&l.points.length===2){
+        lePoints=[l.points[0],l.points[1]];
+        document.getElementById('leP1').textContent=`[${l.points[0]}]`;
+        document.getElementById('leP2').textContent=`[${l.points[1]}]`;
+      }
+    }
+    drawSvgLine();
+    document.getElementById('leStat').textContent=`Frame: ${FRAME_W}x${FRAME_H}`;
+  });
+}
+
+function closeLineEditor(){document.getElementById('lineModal').classList.remove('open')}
+
+function renderExistingLines(){
+  const el=document.getElementById('leLines');
+  if(!existingLines.length){el.innerHTML='<span style="font-size:.7rem;color:var(--mt)">No lines configured</span>';return}
+  el.innerHTML='<div class="lbl" style="margin-bottom:4px">Current Lines</div>'+existingLines.map((l,i)=>
+    `<div class="sr"><span class="k">${l.id} [${l.points[0]}]→[${l.points[1]}] dir:${l.direction_in}</span><span class="v" style="color:var(--or)">active</span></div>`
+  ).join('');
+}
+
+document.getElementById('leSvg').addEventListener('click',function(e){
+  const rect=this.getBoundingClientRect();
+  const sx=e.clientX-rect.left, sy=e.clientY-rect.top;
+  const fx=Math.round(sx/rect.width*FRAME_W), fy=Math.round(sy/rect.height*FRAME_H);
+  if(lePoints.length>=2)lePoints=[];
+  lePoints.push([fx,fy]);
+  if(lePoints.length===1)document.getElementById('leP1').textContent=`[${fx}, ${fy}]`;
+  if(lePoints.length===2)document.getElementById('leP2').textContent=`[${fx}, ${fy}]`;
+  drawSvgLine();
+});
+
+function drawSvgLine(){
+  const svg=document.getElementById('leSvg');
+  const rect=svg.getBoundingClientRect();
+  svg.innerHTML='';
+  if(lePoints.length<1)return;
+  const toSx=p=>p[0]/FRAME_W*100+'%';
+  const toSy=p=>p[1]/FRAME_H*100+'%';
+
+  // Draw existing lines (dim)
+  existingLines.forEach(l=>{
+    if(l.points&&l.points.length===2){
+      const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1',toSx(l.points[0]));line.setAttribute('y1',toSy(l.points[0]));
+      line.setAttribute('x2',toSx(l.points[1]));line.setAttribute('y2',toSy(l.points[1]));
+      line.setAttribute('stroke','rgba(245,158,11,0.3)');line.setAttribute('stroke-width','2');
+      line.setAttribute('stroke-dasharray','6,4');
+      svg.appendChild(line);
+    }
+  });
+
+  // Point 1
+  const c1=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  c1.setAttribute('cx',toSx(lePoints[0]));c1.setAttribute('cy',toSy(lePoints[0]));
+  c1.setAttribute('r','6');c1.setAttribute('fill','#06d6a0');c1.setAttribute('stroke','#fff');c1.setAttribute('stroke-width','2');
+  svg.appendChild(c1);
+
+  if(lePoints.length===2){
+    // Line
+    const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',toSx(lePoints[0]));line.setAttribute('y1',toSy(lePoints[0]));
+    line.setAttribute('x2',toSx(lePoints[1]));line.setAttribute('y2',toSy(lePoints[1]));
+    line.setAttribute('stroke','#f59e0b');line.setAttribute('stroke-width','3');
+    svg.appendChild(line);
+    // Point 2
+    const c2=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c2.setAttribute('cx',toSx(lePoints[1]));c2.setAttribute('cy',toSy(lePoints[1]));
+    c2.setAttribute('r','6');c2.setAttribute('fill','#ef4444');c2.setAttribute('stroke','#fff');c2.setAttribute('stroke-width','2');
+    svg.appendChild(c2);
+
+    // Direction arrow
+    const dir=document.getElementById('leDir').value;
+    const mx=(lePoints[0][0]+lePoints[1][0])/2, my=(lePoints[0][1]+lePoints[1][1])/2;
+    const arrows={left:'◀ IN',right:'▶ IN',up:'▲ IN',down:'▼ IN'};
+    const txt=document.createElementNS('http://www.w3.org/2000/svg','text');
+    txt.setAttribute('x',toSx([mx,0]));txt.setAttribute('y',toSy([0,my]));
+    txt.setAttribute('fill','#f59e0b');txt.setAttribute('font-size','14');txt.setAttribute('font-weight','bold');
+    txt.setAttribute('text-anchor','middle');txt.setAttribute('dy','-8');
+    txt.textContent=arrows[dir]||'IN';
+    svg.appendChild(txt);
+  }
+}
+
+document.getElementById('leDir').addEventListener('change',drawSvgLine);
+
+function clearLinePoints(){lePoints=[];document.getElementById('leP1').textContent='—';document.getElementById('leP2').textContent='—';drawSvgLine();}
+
+function saveLine(){
+  if(lePoints.length!==2){document.getElementById('leStat').textContent='Need 2 points!';return}
+  const line={
+    id:document.getElementById('leId').value||'main-entrance',
+    camera_id:'cam-main',
+    type:'entry_exit',
+    points:lePoints,
+    direction_in:document.getElementById('leDir').value
+  };
+  document.getElementById('leStat').textContent='Saving...';
+  fetch('/api/lines',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({lines:[line],frame_w:FRAME_W,frame_h:FRAME_H})})
+    .then(r=>r.json()).then(d=>{
+      if(d.ok){
+        document.getElementById('leStat').textContent='Saved! Pipeline reloading...';
+        document.getElementById('leStat').style.color='var(--gn)';
+        existingLines=d.lines;
+        renderExistingLines();
+        setTimeout(()=>{document.getElementById('leStat').textContent='';document.getElementById('leStat').style.color='var(--mt)'},3000);
+      }
+    }).catch(e=>{document.getElementById('leStat').textContent='Error: '+e;document.getElementById('leStat').style.color='var(--rd)'});
+}
+
+// ── WebSocket KPI ──
+function go(){
+  const ws=new WebSocket(`ws://${location.host}/ws/kpi`);
+  ws.onopen=()=>document.getElementById('stxt').textContent='Live — Processing';
+  ws.onclose=()=>{document.getElementById('stxt').textContent='Reconnecting...';setTimeout(go,1500)};
+  ws.onmessage=e=>{
+    const d=JSON.parse(e.data);
+
+    // Vibe
+    const vEl=document.getElementById('vs');
+    vEl.textContent=Math.round(d.vs);
+    vEl.style.color=d.vs>=80?'var(--rd)':d.vs>=60?'var(--ac)':d.vs>=40?'var(--or)':'var(--bl)';
+    document.getElementById('vl').textContent=d.vl;
+    document.getElementById('vf').style.width=d.vs+'%';
+
+    // Vibe breakdown (show real CV components)
+    if(d.pc!==undefined){
+      const occ=Math.min(d.pc/Math.max(d.cap,1),1)*25;
+      const eng=Math.min(d.de,100)*0.35;
+      const arm=(d.arm||0)/100*20;
+      const act=d.pc>0?((d.std||100)/100*10+Math.min((d.spd||0)*50,10)):0;
+      document.getElementById('vb').innerHTML=
+        `Occ: <span>${occ.toFixed(0)}</span> | Energy: <span>${eng.toFixed(0)}</span> | Arms: <span>${arm.toFixed(0)}</span> | Activity: <span>${act.toFixed(0)}</span>`;
+    }
+
+    // People
+    document.getElementById('pc').textContent=d.pc;
+    document.getElementById('pk').textContent=d.pk;
+    document.getElementById('at').textContent=d.at;
+    document.getElementById('cap').textContent=d.cap;
+    document.getElementById('oP').textContent=d.occ+'%';
+    const circ=2*Math.PI*32,off=circ-(Math.min(d.occ,100)/100)*circ;
+    const rEl=document.getElementById('oR');
+    rEl.setAttribute('stroke-dashoffset',off);
+    rEl.setAttribute('stroke',d.occ>90?'var(--rd)':d.occ>70?'var(--or)':'var(--cy)');
+
+    // Energy
+    document.getElementById('de').textContent=Math.round(d.de)+'%';
+    document.getElementById('ef').style.width=Math.min(d.de,100)+'%';
+    document.getElementById('el').textContent=Math.round(d.de)+'%';
+
+    // Flow
+    document.getElementById('ei').textContent=d.ei;
+    document.getElementById('eo').textContent=d.eo;
+    document.getElementById('net').textContent=d.ei-d.eo;
+
+    // Real CV signals
+    document.getElementById('armP').textContent=(d.arm||0)+'%';
+    document.getElementById('spdV').textContent=(d.spd||0).toFixed(1)+'px/f';
+    document.getElementById('stdP').textContent=(d.std||0)+'%';
+    document.getElementById('baV').textContent=(d.ba||0)+'°';
+
+    // Perf
+    document.getElementById('dms').textContent=d.dms;
+    document.getElementById('pms').textContent=d.pms;
+    document.getElementById('fps2').textContent=d.fps;
+    document.getElementById('fn').textContent=num(d.fn);
+    document.getElementById('ev').textContent=num(d.ev);
+    document.getElementById('vfps').textContent=d.fps+' fps';
+    document.getElementById('hDetMs').textContent=d.dms;
+    document.getElementById('hPoseMs').textContent=d.pms;
+
+    // Visitors
+    document.getElementById('uv').textContent=d.uv;
+    document.getElementById('rm').textContent=d.rm;
+    document.getElementById('up').textContent=fmtUp(d.up);
+
+    // Charts
+    if(d.ch&&d.ch.length>1)cPpl.update([d.ch]);
+    if(d.vh&&d.vh.length>1)cVib.update([d.vh,d.eh||[]]);
+    if(d.fh&&d.fh.length>1)cFps.update([d.fh]);
+
+    // Heatmap
+    if(d.hm&&d.hm.length){const cells=hmEl.children;for(let r=0;r<d.hm.length&&r<18;r++)for(let c=0;c<(d.hm[r]||[]).length&&c<32;c++){const i=r*32+c;if(i<cells.length)cells[i].style.background=hc(d.hm[r][c])}}
+
+    // Alerts
+    if(d.al&&d.al.length){document.getElementById('abox').innerHTML=d.al.map(a=>`<div class="ai ${a.sev==='critical'?'crit':''}"><span class="ab">${a.type}</span><span>${a.msg}</span><span class="at">${a.t}</span></div>`).join('')}
+  }
+}
+go();
+</script>
+</body>
+</html>

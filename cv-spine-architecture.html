@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CV Spine — Universal Computer Vision Pipeline Architecture</title>
+<style>
+:root {
+  --bg: #06060c;
+  --surface: #0e0e18;
+  --surface2: #161624;
+  --surface3: #1e1e30;
+  --border: #2a2a44;
+  --text: #d8d8e8;
+  --text-muted: #7878a0;
+  --accent: #8b5cf6;
+  --accent2: #06d6a0;
+  --red: #ef4444;
+  --orange: #f59e0b;
+  --yellow: #eab308;
+  --green: #22c55e;
+  --blue: #3b82f6;
+  --cyan: #06b6d4;
+  --pink: #ec4899;
+  --indigo: #6366f1;
+  --glow: 0 0 40px rgba(139,92,246,0.15);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',system-ui,sans-serif;line-height:1.75}
+.container{max-width:1280px;margin:0 auto;padding:24px 36px}
+h1{font-size:2.8rem;background:linear-gradient(135deg,var(--accent),var(--cyan),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px;font-weight:800;letter-spacing:-0.5px}
+.subtitle{font-size:1.15rem;color:var(--text-muted);margin-bottom:40px;max-width:800px}
+h2{font-size:1.7rem;color:var(--accent);margin:56px 0 20px;padding-bottom:12px;border-bottom:2px solid var(--border);letter-spacing:-0.3px}
+h3{font-size:1.25rem;color:var(--accent2);margin:32px 0 14px}
+h4{font-size:1.05rem;color:var(--yellow);margin:22px 0 10px}
+h5{font-size:0.95rem;color:var(--cyan);margin:16px 0 8px}
+p,li{color:var(--text);margin-bottom:8px}
+ul,ol{padding-left:24px}
+code{background:var(--surface2);color:var(--pink);padding:2px 7px;border-radius:4px;font-size:0.88em;font-family:'Fira Code','Cascadia Code',monospace}
+pre{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;overflow-x:auto;margin:14px 0;font-size:0.84em;box-shadow:var(--glow)}
+pre code{background:none;padding:0;color:var(--text)}
+.badge{display:inline-block;padding:3px 11px;border-radius:12px;font-size:0.73rem;font-weight:700;text-transform:uppercase;margin-right:6px;letter-spacing:0.5px}
+.badge-spine{background:linear-gradient(135deg,var(--accent),var(--indigo));color:#fff}
+.badge-product{background:linear-gradient(135deg,var(--accent2),var(--cyan));color:#000}
+.badge-model{background:var(--blue);color:#fff}
+.badge-util{background:var(--orange);color:#000}
+.badge-critical{background:var(--red);color:#fff}
+.badge-core{background:var(--pink);color:#fff}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px 26px;margin:16px 0;box-shadow:var(--glow)}
+.card-spine{border-left:4px solid var(--accent)}
+.card-product{border-left:4px solid var(--accent2)}
+.card-model{border-left:4px solid var(--blue)}
+.card-warn{border-left:4px solid var(--orange)}
+.card-arch{border-left:4px solid var(--cyan)}
+.card-green{border-left:4px solid var(--green)}
+table{width:100%;border-collapse:collapse;margin:16px 0}
+th,td{padding:11px 15px;text-align:left;border-bottom:1px solid var(--border);font-size:0.88rem}
+th{background:var(--surface2);color:var(--accent);font-weight:600}
+tr:hover{background:var(--surface2)}
+.arch-diagram{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;font-family:'Fira Code',monospace;font-size:0.78rem;white-space:pre;overflow-x:auto;line-height:1.55;color:var(--cyan);box-shadow:var(--glow)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px}
+@media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr}}
+.layer-visual{display:flex;flex-direction:column;gap:0;margin:24px 0}
+.layer{padding:18px 24px;text-align:center;font-weight:700;font-size:0.95rem;letter-spacing:0.5px}
+.layer-product{background:linear-gradient(135deg,#06d6a022,#06b6d422);border:2px solid var(--accent2);border-radius:14px 14px 0 0;color:var(--accent2)}
+.layer-adapter{background:linear-gradient(135deg,#f59e0b15,#eab30815);border:2px solid var(--orange);border-left:2px solid var(--orange);border-right:2px solid var(--orange);color:var(--orange)}
+.layer-spine{background:linear-gradient(135deg,#8b5cf622,#6366f122);border:2px solid var(--accent);color:var(--accent)}
+.layer-infra{background:linear-gradient(135deg,#3b82f615,#06b6d415);border:2px solid var(--blue);border-radius:0 0 14px 14px;color:var(--blue)}
+.tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:0.72rem;font-weight:600;margin:2px 4px}
+.tag-det{background:#3b82f630;color:var(--blue)}
+.tag-pose{background:#8b5cf630;color:var(--accent)}
+.tag-reid{background:#ec489930;color:var(--pink)}
+.tag-roi{background:#06d6a030;color:var(--accent2)}
+.tag-track{background:#f59e0b30;color:var(--orange)}
+.tag-face{background:#ef444430;color:var(--red)}
+.toc{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:26px;margin:30px 0}
+.toc a{color:var(--accent2);text-decoration:none}
+.toc a:hover{text-decoration:underline}
+.toc ol{counter-reset:toc;list-style:none;padding-left:0}
+.toc li{counter-increment:toc;padding:7px 0;border-bottom:1px solid var(--border)}
+.toc li:last-child{border-bottom:none}
+.toc li::before{content:counter(toc) ". ";color:var(--accent);font-weight:700}
+.vertical-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;transition:transform 0.2s,box-shadow 0.2s}
+.vertical-card:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(139,92,246,0.2)}
+.vertical-icon{font-size:2rem;margin-bottom:8px}
+.pipeline-step{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--surface2);border-radius:8px;margin:6px 0}
+.pipeline-step .step-num{background:var(--accent);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;flex-shrink:0}
+.pipeline-step .step-text{font-size:0.9rem}
+.comment{color:var(--text-muted);font-style:italic}
+.highlight{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:700}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- HEADER -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<h1>CV Spine</h1>
+<p class="subtitle">
+  Universal Computer Vision Pipeline — build once, deploy everywhere.
+  One intelligent backbone. Infinite product layers.
+  Clubs. Schools. Military. Surveillance. Retail. Hospitals. Warehouses.
+</p>
+
+<div class="layer-visual">
+  <div class="layer layer-product">PRODUCT LAYER — VibeCheck / SchoolGuard / PerimeterAI / HomeWatch / RetailIQ</div>
+  <div class="layer layer-adapter">ADAPTER LAYER — Product-specific configs, rules, UI contracts, alert definitions</div>
+  <div class="layer layer-spine">CV SPINE — Detection + Pose + ReID + Tracking + ROI + Face + Scene Understanding</div>
+  <div class="layer layer-infra">INFRA LAYER — GPU Pool / MQTT / Redis / TimescaleDB / Triton / Kubernetes</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- TOC -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="toc">
+<h3 style="margin-top:0;color:var(--text)">Contents</h3>
+<ol>
+  <li><a href="#s1">Core Concept — Why a Spine</a></li>
+  <li><a href="#s2">Architecture Overview</a></li>
+  <li><a href="#s3">CV Spine Modules (The 6 Pillars)</a></li>
+  <li><a href="#s4">Utility Layer</a></li>
+  <li><a href="#s5">Adapter / Plugin System</a></li>
+  <li><a href="#s6">Product Vertical Blueprints</a></li>
+  <li><a href="#s7">Data Architecture</a></li>
+  <li><a href="#s8">Inference Infrastructure</a></li>
+  <li><a href="#s9">Deployment Models</a></li>
+  <li><a href="#s10">Project Structure & Repo Layout</a></li>
+  <li><a href="#s11">Build Sequence (What to Build First)</a></li>
+  <li><a href="#s12">Effort Estimate & Team</a></li>
+</ol>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 1. CORE CONCEPT -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s1">1. Core Concept — Why a Spine</h2>
+
+<div class="card card-spine">
+<h4 style="margin-top:0">Problem</h4>
+<p>Every CV product (surveillance, crowd analytics, attendance, perimeter security) needs same core: detect people → track them → understand pose → identify re-entry → define spatial zones → generate events. Building this from scratch per product = massive waste.</p>
+
+<h4>Solution: CV Spine</h4>
+<p>Single reusable pipeline with 6 core CV modules + utility layer + adapter interface. Each product = thin config + business rules + UI, sitting on top of spine. Spine team maintains models, inference, tracking. Product teams consume events.</p>
+</div>
+
+<div class="card card-arch">
+<h4 style="margin-top:0">Spine vs Product — Clear Separation</h4>
+<table>
+<tr><th>Spine Owns (Build Once)</th><th>Product Owns (Per Vertical)</th></tr>
+<tr><td>Person detection model + inference</td><td>What "person detected" means (customer vs intruder vs student)</td></tr>
+<tr><td>Pose keypoint extraction</td><td>What poses matter (dancing? falling? fighting? slouching?)</td></tr>
+<tr><td>ReID embedding generation</td><td>Why you track someone (attendance? VIP? suspect?)</td></tr>
+<tr><td>Entry/exit line crossing</td><td>What lines mean (door? restricted zone? checkout?)</td></tr>
+<tr><td>ROI zone detection</td><td>What zones mean (dance floor? classroom? exclusion zone?)</td></tr>
+<tr><td>Face feature extraction</td><td>Who is in gallery (students? employees? watchlist?)</td></tr>
+<tr><td>Frame ingest + decode + distribute</td><td>Camera layout, venue topology</td></tr>
+<tr><td>GPU scheduling + model serving</td><td>Which models to enable per camera</td></tr>
+<tr><td>Event bus (MQTT/Redis)</td><td>Which events to subscribe to, alert logic</td></tr>
+<tr><td>TimescaleDB schema + retention</td><td>Product-specific aggregation queries</td></tr>
+</table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 2. ARCHITECTURE OVERVIEW -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s2">2. Architecture Overview</h2>
+
+<div class="arch-diagram">
+                           ╔══════════════════════════════════════════════════╗
+                           ║              PRODUCT LAYER (thin)               ║
+                           ║                                                  ║
+                           ║  ┌──────────┐ ┌──────────┐ ┌──────────┐        ║
+                           ║  │ VibeCheck│ │SchoolGrd │ │PerimtrAI│  ...    ║
+                           ║  │  Rules   │ │  Rules   │ │  Rules  │         ║
+                           ║  └────┬─────┘ └────┬─────┘ └────┬────┘        ║
+                           ╚══════╪═════════════╪═══════════╪═══════════════╝
+                                  │             │            │
+                           ╔══════╪═════════════╪═══════════╪═══════════════╗
+                           ║      ▼             ▼            ▼   ADAPTER    ║
+                           ║  ┌─────────────────────────────────────────┐   ║
+                           ║  │          Product Adapter Interface       │   ║
+                           ║  │  configure() → enable modules + params   │   ║
+                           ║  │  on_event()  → receive spine events      │   ║
+                           ║  │  get_rules() → business logic defs       │   ║
+                           ║  └─────────────────┬───────────────────────┘   ║
+                           ╚════════════════════╪═══════════════════════════╝
+                                                │
+  ╔═════════════════════════════════════════════╪════════════════════════════════════╗
+  ║                              CV SPINE (build once)                              ║
+  ║                                                                                  ║
+  ║   ┌──────────────────────────────────────────────────────────────────────────┐   ║
+  ║   │                        FRAME ROUTER / ORCHESTRATOR                       │   ║
+  ║   │   Receives frames from all cameras → routes to enabled modules           │   ║
+  ║   │   Manages dependencies: detection → pose / reid / tracking               │   ║
+  ║   └─────┬──────────┬───────────┬───────────┬───────────┬──────────┬─────────┘   ║
+  ║         │          │           │           │           │          │              ║
+  ║   ┌─────▼────┐┌────▼─────┐┌───▼────┐┌─────▼────┐┌────▼────┐┌───▼─────┐        ║
+  ║   │ PERSON   ││  POSE    ││ REID   ││ ENTRY/   ││  ROI    ││  FACE   │        ║
+  ║   │ DETECT   ││ KEYPOINT ││ EMBED  ││ EXIT     ││ SPATIAL ││ FEATURE │        ║
+  ║   │          ││          ││        ││ TRACKING ││ ZONES   ││         │        ║
+  ║   │ YOLOv8/10││ YOLO-pose││ArcFace ││ ByteTrack││ Polygon ││ SCRFD + │        ║
+  ║   │ +NMS     ││ 17-kpt   ││ body   ││ + LoR    ││ + Grid  ││ ArcFace │        ║
+  ║   └─────┬────┘└────┬─────┘└───┬────┘└─────┬────┘└────┬────┘└───┬─────┘        ║
+  ║         │          │           │           │          │          │              ║
+  ║   ┌─────▼──────────▼───────────▼───────────▼──────────▼──────────▼─────────┐   ║
+  ║   │                         EVENT BUS                                       │   ║
+  ║   │   person.detected | pose.keypoints | reid.match | line.crossed |       │   ║
+  ║   │   zone.entered | zone.exited | face.recognized | face.unknown |        │   ║
+  ║   │   track.created | track.lost | anomaly.detected                        │   ║
+  ║   └────────────────────────────────────────────────────────────────────────┘   ║
+  ║                                                                                  ║
+  ║   ┌────────────────────────────────────────────────────────────────────────────┐ ║
+  ║   │  UTILITIES: FrameGrabber | Anonymizer | FrameDedup | ModelRegistry |      │ ║
+  ║   │  GPUScheduler | MetricsCollector | ConfigLoader | HealthChecker           │ ║
+  ║   └────────────────────────────────────────────────────────────────────────────┘ ║
+  ╚══════════════════════════════════════════════════════════════════════════════════╝
+                                          │
+  ╔═══════════════════════════════════════╪══════════════════════════════════════════╗
+  ║                            INFRA LAYER                                          ║
+  ║   ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐        ║
+  ║   │  MQTT    │  │  Redis   │  │Timescale │  │  Qdrant  │  │  Triton  │        ║
+  ║   │  Broker  │  │  Cache   │  │  DB      │  │ VectorDB │  │ Inference│        ║
+  ║   └──────────┘  └──────────┘  └──────────┘  └──────────┘  └──────────┘        ║
+  ╚════════════════════════════════════════════════════════════════════════════════════╝
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 3. CV SPINE MODULES -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s3">3. CV Spine Modules — The 6 Pillars</h2>
+
+<p class="comment">Each pillar = independent module. Product enables/disables per camera. All share detection results via context dict.</p>
+
+<!-- ─── PILLAR 1: Person Detection ─── -->
+<h3>Pillar 1: Person Detection <span class="tag tag-det">DETECTION</span></h3>
+<div class="card card-model">
+<h4 style="margin-top:0">Models</h4>
+<table>
+<tr><th>Model</th><th>Use Case</th><th>Speed (T4)</th><th>mAP</th><th>VRAM</th></tr>
+<tr><td><strong>YOLOv8n</strong></td><td>Edge / CPU / low-power</td><td>1.2ms</td><td>37.3</td><td>~800MB</td></tr>
+<tr><td><strong>YOLOv8m</strong></td><td>Balanced (default)</td><td>3.5ms</td><td>50.2</td><td>~1.5GB</td></tr>
+<tr><td><strong>YOLOv10-M</strong></td><td>NMS-free, lower latency</td><td>3.2ms</td><td>51.3</td><td>~1.5GB</td></tr>
+<tr><td><strong>RT-DETR-L</strong></td><td>Transformer-based, best accuracy</td><td>6.5ms</td><td>53.0</td><td>~2.5GB</td></tr>
+</table>
+
+<h4>Output Contract</h4>
+<pre><code>{
+  "event": "person.detected",
+  "camera_id": "cam-lobby-01",
+  "timestamp": 1716556800.123,
+  "frame_id": "f-abc123",
+  "detections": [
+    {
+      "track_id": 42,
+      "bbox": [120, 80, 220, 380],       // [x1, y1, x2, y2] pixels
+      "bbox_norm": [0.094, 0.111, 0.172, 0.528],  // normalized 0-1
+      "confidence": 0.87,
+      "class": "person",
+      "embedding_ref": "emb-42-1716556800"  // pointer for ReID
+    }
+  ],
+  "frame_w": 1280,
+  "frame_h": 720,
+  "person_count": 12,
+  "inference_ms": 3.4
+}</code></pre>
+
+<h4>Config Schema (product sets this)</h4>
+<pre><code># Per-camera detection config
+detection:
+  model: "yolov8m"          # or yolov10m, rt-detr-l
+  confidence: 0.35
+  nms_iou: 0.45
+  classes: [0]              # COCO class 0 = person
+  imgsz: 640
+  device: "auto"            # auto | cuda:0 | cpu
+  half: true                # FP16
+  max_detections: 100
+  min_pixel_area: 1200      # filter noise
+  aspect_ratio: [0.5, 5.0]  # h/w filter</code></pre>
+</div>
+
+<!-- ─── PILLAR 2: Pose Keypoints ─── -->
+<h3>Pillar 2: Pose Keypoints <span class="tag tag-pose">POSE</span></h3>
+<div class="card card-model">
+<h4 style="margin-top:0">Models</h4>
+<table>
+<tr><th>Model</th><th>Keypoints</th><th>Speed (T4)</th><th>Use</th></tr>
+<tr><td><strong>YOLOv8m-pose</strong></td><td>17 (COCO)</td><td>5ms</td><td>Default — fast, accurate enough for activity</td></tr>
+<tr><td><strong>ViTPose-B</strong></td><td>17 (COCO) / 133 (whole-body)</td><td>12ms</td><td>High accuracy — hand gestures, facial landmarks</td></tr>
+<tr><td><strong>MediaPipe Pose</strong></td><td>33</td><td>8ms (CPU)</td><td>Edge / CPU-only deployments</td></tr>
+</table>
+
+<h4>Output Contract</h4>
+<pre><code>{
+  "event": "pose.keypoints",
+  "track_id": 42,
+  "keypoints": [
+    {"name": "nose",           "x": 0.45, "y": 0.12, "conf": 0.92},
+    {"name": "left_shoulder",  "x": 0.42, "y": 0.25, "conf": 0.88},
+    {"name": "right_shoulder", "x": 0.48, "y": 0.25, "conf": 0.90},
+    // ... 17 keypoints
+  ],
+  "body_angle": 15.3,          // torso tilt degrees
+  "arm_raise": "both",         // none | left | right | both
+  "is_standing": true,
+  "is_sitting": false,
+  "movement_magnitude": 0.34,  // 0-1 normalized motion energy
+  "pose_class": "standing_arms_up"  // optional classifier output
+}</code></pre>
+
+<h4>Derived Signals (spine computes, product interprets)</h4>
+<ul>
+  <li><strong>Fall detection</strong>: keypoint velocity spike + horizontal torso angle > 60° → <code>pose.fall_detected</code></li>
+  <li><strong>Dance energy</strong>: limb velocity + periodicity → <code>pose.dance_energy: 0-100</code></li>
+  <li><strong>Fight detection</strong>: 2+ persons close + high arm velocity + arm extension → <code>pose.aggression_detected</code></li>
+  <li><strong>Loitering</strong>: low movement magnitude for > N seconds → <code>pose.loitering</code></li>
+  <li><strong>Attention direction</strong>: head keypoints → gaze direction estimate</li>
+</ul>
+</div>
+
+<!-- ─── PILLAR 3: ReID ─── -->
+<h3>Pillar 3: Re-Identification (Body-based) <span class="tag tag-reid">REID</span></h3>
+<div class="card card-model">
+<h4 style="margin-top:0">Models</h4>
+<table>
+<tr><th>Model</th><th>Embedding Dim</th><th>Speed</th><th>Strength</th></tr>
+<tr><td><strong>OSNet-x1.0</strong></td><td>512</td><td>2ms/crop</td><td>Best body-only ReID. Works without face. Clothing-based.</td></tr>
+<tr><td><strong>FastReID (BoT)</strong></td><td>2048</td><td>4ms/crop</td><td>Higher accuracy, heavier. Good for cross-camera.</td></tr>
+<tr><td><strong>CLIP ViT-B/16 (body crop)</strong></td><td>512</td><td>6ms/crop</td><td>Zero-shot, works across domains without fine-tuning</td></tr>
+</table>
+
+<h4>How It Works</h4>
+<pre><code>1. PersonDetector emits bbox crop
+2. ReID module extracts 512-dim embedding from crop
+3. Embedding compared against gallery (Qdrant vector DB)
+   - Cosine similarity > 0.75 → "same person"
+   - Below threshold → "new person", add to gallery
+4. Gallery has TTL — embeddings expire after N hours
+   (or persist for enrolled users: employees, students)
+
+Events:
+  "reid.match"       → person re-identified (track_id → gallery_id)
+  "reid.new_person"  → first time seen today
+  "reid.cross_camera"→ same person seen on different camera</code></pre>
+
+<h4>Privacy Architecture</h4>
+<ul>
+  <li>Body-based ReID = <strong>no facial biometrics</strong>. Clothing/shape/gait based. GDPR-friendlier.</li>
+  <li>Embeddings stored in Qdrant with TTL. Not reversible to image.</li>
+  <li>Product layer decides gallery retention policy (schools: session-only, military: persistent)</li>
+</ul>
+</div>
+
+<!-- ─── PILLAR 4: Entry/Exit Tracking ─── -->
+<h3>Pillar 4: Entry/Exit & Line-of-Regard Tracking <span class="tag tag-track">TRACKING</span></h3>
+<div class="card card-model">
+<h4 style="margin-top:0">Components</h4>
+<table>
+<tr><th>Component</th><th>Library</th><th>Purpose</th></tr>
+<tr><td><strong>Multi-Object Tracker</strong></td><td>ByteTrack / BoT-SORT / OC-SORT</td><td>Frame-to-frame ID assignment</td></tr>
+<tr><td><strong>Line Crossing Detector</strong></td><td>Custom (Spine utility)</td><td>Detect when track path crosses defined line</td></tr>
+<tr><td><strong>Direction Classifier</strong></td><td>Custom (track velocity vector)</td><td>Enter vs Exit based on crossing direction</td></tr>
+<tr><td><strong>Dwell Time Calculator</strong></td><td>Custom (Spine utility)</td><td>Time spent in zone / at position</td></tr>
+</table>
+
+<h4>Line-of-Regard (LoR) System</h4>
+<pre><code># Product defines lines in camera view:
+lines:
+  - id: "main-entrance"
+    type: "entry_exit"           # bidirectional
+    points: [[100, 500], [600, 500]]  # pixel coords
+    direction_in: "up"           # crossing upward = entry
+
+  - id: "restricted-door"
+    type: "entry_only"           # one-way
+    points: [[700, 200], [700, 600]]
+    alert_on: "exit"             # alert if someone exits through entry-only
+
+  - id: "checkout-line"
+    type: "counting"
+    points: [[0, 400], [1280, 400]]
+
+# Spine computes:
+# 1. Track centroid path history
+# 2. Ray-segment intersection with each line
+# 3. Direction via velocity vector dot product with line normal
+# 4. Emit: line.crossed { line_id, track_id, direction: "in"|"out" }</code></pre>
+
+<h4>Output Events</h4>
+<pre><code>"line.crossed"    → { line_id, track_id, direction, timestamp }
+"track.created"   → { track_id, first_bbox, camera_id }
+"track.lost"      → { track_id, last_bbox, duration_seconds, path }
+"dwell.exceeded"  → { track_id, zone_id, dwell_seconds }
+"occupancy.count" → { camera_id, zone_id, count, delta }</code></pre>
+</div>
+
+<!-- ─── PILLAR 5: ROI Spatial Zones ─── -->
+<h3>Pillar 5: ROI-Based Spatial Zones <span class="tag tag-roi">ROI</span></h3>
+<div class="card card-model">
+<h4 style="margin-top:0">Zone Types</h4>
+<table>
+<tr><th>Zone Type</th><th>Shape</th><th>Events</th><th>Example Uses</th></tr>
+<tr><td><strong>Polygon Zone</strong></td><td>Arbitrary polygon</td><td>enter, exit, dwell, count</td><td>Dance floor, checkout area, classroom desk group</td></tr>
+<tr><td><strong>Exclusion Zone</strong></td><td>Polygon</td><td>intrusion alert</td><td>Restricted area, construction zone, server room</td></tr>
+<tr><td><strong>Density Grid</strong></td><td>NxM grid overlay</td><td>heatmap, hotspot</td><td>Crowd density visualization</td></tr>
+<tr><td><strong>Perspective Zone</strong></td><td>Polygon + homography</td><td>real-world position</td><td>Bird's-eye view, accurate distance measurement</td></tr>
+<tr><td><strong>Tripwire</strong></td><td>Line segment</td><td>cross count</td><td>Doorway, gate, aisle (alias for entry/exit line)</td></tr>
+</table>
+
+<h4>Zone Configuration</h4>
+<pre><code>zones:
+  - id: "dance-floor"
+    type: "polygon"
+    camera_id: "cam-main-01"
+    points: [[200,300],[800,300],[900,700],[100,700]]
+    alerts:
+      - condition: "count > 150"
+        event: "zone.overcrowded"
+        cooldown: 60
+    analytics:
+      - heatmap: true
+        grid: [32, 18]
+      - dwell_time: true
+        threshold: 300  # seconds
+      - density_alert: 0.85  # % of capacity
+
+  - id: "staff-only"
+    type: "exclusion"
+    camera_id: "cam-hallway-02"
+    points: [[500,0],[700,0],[700,400],[500,400]]
+    whitelist_gallery: "staff-faces"   # face ReID gallery
+    alerts:
+      - condition: "person_detected AND NOT in_whitelist"
+        event: "zone.unauthorized_entry"
+        severity: "critical"</code></pre>
+
+<h4>Spatial Recommendation Engine</h4>
+<pre><code># Spine builds spatial intelligence. Product interprets:
+
+spatial_recommendations:
+  # Auto-generated by spine based on observation
+  - type: "high_traffic_path"
+    description: "80% of people walk NW→SE diagonal"
+    data: { dominant_flow_vector: [0.7, -0.5], confidence: 0.82 }
+
+  - type: "dead_zone"
+    description: "Zone C3 has <2% foot traffic"
+    data: { grid_cell: [2, 3], avg_dwell: 0, visits_per_hour: 0.3 }
+
+  - type: "bottleneck"
+    description: "Congestion at coordinates [450, 300]"
+    data: { position: [450, 300], avg_density: 8.5, flow_speed: 0.1 }
+
+  - type: "optimal_camera_placement"
+    description: "Current blind spot at [800-1000, 0-200]"
+    data: { blind_region: [[800,0],[1000,0],[1000,200],[800,200]] }</code></pre>
+</div>
+
+<!-- ─── PILLAR 6: Face Features ─── -->
+<h3>Pillar 6: Facial Feature ReID <span class="tag tag-face">FACE</span></h3>
+<div class="card card-model">
+<h4 style="margin-top:0">Models</h4>
+<table>
+<tr><th>Component</th><th>Model</th><th>Speed</th><th>Notes</th></tr>
+<tr><td>Face Detection</td><td><strong>SCRFD-10GF</strong> (InsightFace)</td><td>3ms/frame</td><td>Handles angles, occlusion, masks. ONNX.</td></tr>
+<tr><td>Face Alignment</td><td><strong>InsightFace alignment</strong></td><td>0.5ms/face</td><td>5-point landmark → affine warp</td></tr>
+<tr><td>Face Embedding</td><td><strong>ArcFace-R100</strong></td><td>2ms/face</td><td>512-dim. State-of-art recognition.</td></tr>
+<tr><td>Age/Gender</td><td><strong>MiVOLO</strong> (body-aware)</td><td>5ms/person</td><td>Uses body when face occluded</td></tr>
+<tr><td>Liveness</td><td><strong>MiniFASNet</strong></td><td>1ms/face</td><td>Anti-spoofing (photo/screen attack)</td></tr>
+</table>
+
+<h4>Privacy-First Design</h4>
+<pre><code># Face module has strict privacy controls baked into spine:
+
+face_config:
+  enabled: false                    # OFF by default — product must opt-in
+  anonymize_before_stream: true     # ALWAYS blur before MQTT/WebSocket
+  embedding_storage: "volatile"     # volatile | session | persistent
+  embedding_ttl: 3600               # auto-delete after 1 hour (volatile)
+  gallery_consent_required: true    # must have explicit consent record
+  gdpr_mode: true                   # enables: right-to-delete, data export
+
+  # Galleries (product defines who's enrolled)
+  galleries:
+    - id: "staff"
+      type: "persistent"
+      consent: "employment-contract"
+    - id: "visitors-today"
+      type: "session"
+      ttl: 86400
+      auto_purge: true</code></pre>
+
+<h4>Output Events</h4>
+<pre><code>"face.detected"     → { track_id, bbox, confidence, landmarks }
+"face.recognized"   → { track_id, gallery_id, person_name, similarity }
+"face.unknown"      → { track_id, embedding_ref, suggested_action }
+"face.liveness"     → { track_id, is_real: true/false, attack_type }
+"face.demographics" → { track_id, age_range, gender_presenting }</code></pre>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 4. UTILITY LAYER -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s4">4. Utility Layer</h2>
+
+<p class="comment">Shared tools every module uses. Part of spine, not product.</p>
+
+<div class="grid-2">
+<div class="card card-spine">
+<h4 style="margin-top:0"><span class="badge badge-util">UTIL</span> Frame Ingest Manager</h4>
+<ul>
+  <li>Multi-protocol: RTSP, RTMP, HLS, USB, IP camera HTTP, file</li>
+  <li>Background reader thread — always latest frame, no buffer bloat</li>
+  <li>Auto-reconnect with exponential backoff</li>
+  <li>Health monitoring per camera (FPS, latency, packet loss)</li>
+  <li>Resolution normalization (configurable target)</li>
+</ul>
+</div>
+
+<div class="card card-spine">
+<h4 style="margin-top:0"><span class="badge badge-util">UTIL</span> GPU Scheduler</h4>
+<ul>
+  <li>Multi-model batching: collect frames from N cameras → single GPU batch</li>
+  <li>Priority queues: real-time > analytics > background</li>
+  <li>Memory-aware scheduling: track per-model VRAM, prevent OOM</li>
+  <li>Fallback: GPU busy → queue or drop frame (configurable per product)</li>
+  <li>Multi-GPU support: round-robin or affinity-based</li>
+</ul>
+</div>
+
+<div class="card card-spine">
+<h4 style="margin-top:0"><span class="badge badge-util">UTIL</span> Frame Deduplication</h4>
+<ul>
+  <li>Perceptual hash (pHash) per frame</li>
+  <li>If Hamming distance &lt; threshold from last processed → skip inference</li>
+  <li>Saves 60-80% GPU on static cameras (parking lots, hallways at night)</li>
+  <li>Configurable sensitivity per camera/product</li>
+</ul>
+</div>
+
+<div class="card card-spine">
+<h4 style="margin-top:0"><span class="badge badge-util">UTIL</span> Anonymizer</h4>
+<ul>
+  <li>Runs BEFORE any frame leaves spine (MQTT, storage, WebSocket)</li>
+  <li>SCRFD face detection → Gaussian blur / pixelation / solid fill</li>
+  <li>Body anonymization option (full silhouette replacement)</li>
+  <li>License plate blur (YOLO-trained or PaddleOCR detection)</li>
+  <li>Configurable: blur strength, region expansion, bypass for recognized gallery</li>
+</ul>
+</div>
+
+<div class="card card-spine">
+<h4 style="margin-top:0"><span class="badge badge-util">UTIL</span> Model Registry</h4>
+<ul>
+  <li>Central catalog of all loaded models</li>
+  <li>Hot-reload: swap model version without restart</li>
+  <li>A/B testing: run 2 model versions, compare outputs</li>
+  <li>Format support: PyTorch, ONNX, TensorRT, OpenVINO</li>
+  <li>Version tracking + rollback</li>
+</ul>
+</div>
+
+<div class="card card-spine">
+<h4 style="margin-top:0"><span class="badge badge-util">UTIL</span> Metrics & Observability</h4>
+<ul>
+  <li>Prometheus metrics: inference_latency, frames_processed, detections_count, gpu_util, queue_depth</li>
+  <li>OpenTelemetry tracing: frame → detection → tracking → event</li>
+  <li>Model drift monitoring: confidence distribution over time</li>
+  <li>Camera health: FPS, frame drops, reconnects</li>
+  <li>Per-product dashboards via Grafana</li>
+</ul>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 5. ADAPTER / PLUGIN SYSTEM -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s5">5. Adapter / Plugin System</h2>
+
+<div class="card card-arch">
+<h4 style="margin-top:0">Product Adapter Interface</h4>
+<pre><code>from abc import ABC, abstractmethod
+from typing import Dict, List, Any
+from cv_spine.events import SpineEvent
+from cv_spine.config import CameraConfig, ZoneConfig, LineConfig
+
+
+class ProductAdapter(ABC):
+    """
+    Every product implements this. Spine calls these methods.
+    Product never touches spine internals — only receives events and provides config.
+    """
+
+    @property
+    @abstractmethod
+    def product_id(self) -> str:
+        """Unique product identifier: 'vibecheck', 'schoolguard', etc."""
+        ...
+
+    @abstractmethod
+    def get_camera_configs(self) -> List[CameraConfig]:
+        """Which cameras, what modules enabled, what params."""
+        ...
+
+    @abstractmethod
+    def get_zone_configs(self) -> List[ZoneConfig]:
+        """ROI zones, exclusion zones, density grids per camera."""
+        ...
+
+    @abstractmethod
+    def get_line_configs(self) -> List[LineConfig]:
+        """Entry/exit lines, tripwires, counting lines."""
+        ...
+
+    @abstractmethod
+    def get_face_galleries(self) -> Dict[str, Any]:
+        """Face recognition galleries (if face module enabled)."""
+        ...
+
+    @abstractmethod
+    def on_event(self, event: SpineEvent) -> None:
+        """
+        Spine pushes events here. Product decides what to do:
+        - VibeCheck: update vibe score
+        - SchoolGuard: mark attendance
+        - PerimeterAI: trigger alarm
+        """
+        ...
+
+    def get_alert_rules(self) -> List[Dict]:
+        """Optional: declarative alert rules. Default = handle in on_event."""
+        return []
+
+    def get_analytics_config(self) -> Dict:
+        """Optional: what to persist, at what granularity."""
+        return {"persist_events": True, "aggregation_interval": 60}
+
+
+# ── Example: VibeCheck Adapter ──
+
+class VibeCheckAdapter(ProductAdapter):
+    product_id = "vibecheck"
+
+    def get_camera_configs(self):
+        return [
+            CameraConfig(
+                camera_id="cam-main",
+                source="rtsp://mediamtx:8554/venue-001",
+                modules={
+                    "person_detector": {"model": "yolov8m", "confidence": 0.35},
+                    "pose_keypoints":  {"model": "yolov8m-pose", "fps": 2.0},
+                    "roi_zones":       {"enabled": True},
+                    "entry_exit":      {"enabled": True},
+                    "reid":            {"enabled": True, "gallery_ttl": 14400},
+                    "face":            {"enabled": False},  # privacy: no face in clubs
+                },
+                stream_to_browser=True,
+                anonymize=True,
+            )
+        ]
+
+    def get_zone_configs(self):
+        return [
+            ZoneConfig(id="dance-floor", camera_id="cam-main", type="polygon",
+                       points=[[200,300],[800,300],[900,700],[100,700]],
+                       analytics={"heatmap": True, "dwell": True}),
+            ZoneConfig(id="bar-area", camera_id="cam-main", type="polygon",
+                       points=[[0,0],[400,0],[400,300],[0,300]]),
+        ]
+
+    def on_event(self, event):
+        if event.type == "pose.dance_energy":
+            self.vibe_engine.update_dance_score(event.data)
+        elif event.type == "occupancy.count":
+            self.vibe_engine.update_occupancy(event.data)
+        elif event.type == "zone.overcrowded":
+            self.alert_service.send("overcrowded", event.data)
+</code></pre>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 6. PRODUCT VERTICAL BLUEPRINTS -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s6">6. Product Vertical Blueprints</h2>
+
+<div class="grid-3">
+
+<div class="vertical-card">
+<div class="vertical-icon">🎵</div>
+<h4 style="margin-top:0">VibeCheck — Clubs/Bars</h4>
+<p><strong>Spine modules used:</strong></p>
+<p><span class="tag tag-det">Detection</span> <span class="tag tag-pose">Pose</span> <span class="tag tag-reid">ReID</span> <span class="tag tag-track">Entry/Exit</span> <span class="tag tag-roi">ROI</span></p>
+<p><strong>Product-specific:</strong></p>
+<ul>
+  <li>Dance energy scoring (pose velocity)</li>
+  <li>Vibe label engine (rule matching)</li>
+  <li>Occupancy % with capacity alerts</li>
+  <li>Crowd flow heatmaps</li>
+  <li>Peak-time prediction</li>
+</ul>
+<p><strong>Face:</strong> OFF (privacy in entertainment)</p>
+</div>
+
+<div class="vertical-card">
+<div class="vertical-icon">🏫</div>
+<h4 style="margin-top:0">SchoolGuard — Education</h4>
+<p><strong>Spine modules used:</strong></p>
+<p><span class="tag tag-det">Detection</span> <span class="tag tag-pose">Pose</span> <span class="tag tag-face">Face</span> <span class="tag tag-track">Entry/Exit</span> <span class="tag tag-roi">ROI</span></p>
+<p><strong>Product-specific:</strong></p>
+<ul>
+  <li>Automated attendance (face → student DB)</li>
+  <li>Unauthorized person alert</li>
+  <li>Fight / aggression detection (pose)</li>
+  <li>Restricted zone breach alerts</li>
+  <li>Parent pickup queue management</li>
+</ul>
+<p><strong>Face:</strong> ON (parental consent, enrolled gallery)</p>
+</div>
+
+<div class="vertical-card">
+<div class="vertical-icon">🎖️</div>
+<h4 style="margin-top:0">PerimeterAI — Military/Defense</h4>
+<p><strong>Spine modules used:</strong></p>
+<p><span class="tag tag-det">Detection</span> <span class="tag tag-pose">Pose</span> <span class="tag tag-reid">ReID</span> <span class="tag tag-face">Face</span> <span class="tag tag-track">Entry/Exit</span> <span class="tag tag-roi">ROI</span></p>
+<p><strong>Product-specific:</strong></p>
+<ul>
+  <li>Perimeter breach detection</li>
+  <li>Watchlist face matching</li>
+  <li>Crawling/prone pose detection</li>
+  <li>Vehicle + person correlation</li>
+  <li>Night vision / thermal integration</li>
+  <li>Multi-camera track handoff</li>
+</ul>
+<p><strong>Face:</strong> ON (persistent watchlist gallery)</p>
+</div>
+
+<div class="vertical-card">
+<div class="vertical-icon">🏠</div>
+<h4 style="margin-top:0">HomeWatch — Residential</h4>
+<p><strong>Spine modules used:</strong></p>
+<p><span class="tag tag-det">Detection</span> <span class="tag tag-face">Face</span> <span class="tag tag-roi">ROI</span></p>
+<p><strong>Product-specific:</strong></p>
+<ul>
+  <li>Known person → no alert</li>
+  <li>Unknown person → push notification</li>
+  <li>Package delivery detection</li>
+  <li>Pet vs person classification</li>
+  <li>Night-time motion zones</li>
+</ul>
+<p><strong>Lightweight:</strong> Edge deploy on Raspberry Pi / Jetson</p>
+</div>
+
+<div class="vertical-card">
+<div class="vertical-icon">🛒</div>
+<h4 style="margin-top:0">RetailIQ — Stores</h4>
+<p><strong>Spine modules used:</strong></p>
+<p><span class="tag tag-det">Detection</span> <span class="tag tag-pose">Pose</span> <span class="tag tag-reid">ReID</span> <span class="tag tag-track">Entry/Exit</span> <span class="tag tag-roi">ROI</span></p>
+<p><strong>Product-specific:</strong></p>
+<ul>
+  <li>Customer journey mapping (ReID across cameras)</li>
+  <li>Shelf attention heatmaps</li>
+  <li>Queue length + wait time</li>
+  <li>Shoplifting behavior detection</li>
+  <li>Staff vs customer classification</li>
+</ul>
+<p><strong>Face:</strong> OFF (retail privacy regulations)</p>
+</div>
+
+<div class="vertical-card">
+<div class="vertical-icon">🏥</div>
+<h4 style="margin-top:0">CareWatch — Healthcare</h4>
+<p><strong>Spine modules used:</strong></p>
+<p><span class="tag tag-det">Detection</span> <span class="tag tag-pose">Pose</span> <span class="tag tag-face">Face</span> <span class="tag tag-track">Entry/Exit</span> <span class="tag tag-roi">ROI</span></p>
+<p><strong>Product-specific:</strong></p>
+<ul>
+  <li>Patient fall detection (pose)</li>
+  <li>Wandering patient alerts (dementia)</li>
+  <li>Staff response time tracking</li>
+  <li>Bed occupancy monitoring</li>
+  <li>PPE compliance detection</li>
+</ul>
+<p><strong>Face:</strong> ON (patient safety, staff ID)</p>
+</div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 7. DATA ARCHITECTURE -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s7">7. Data Architecture</h2>
+
+<div class="card card-spine">
+<h4 style="margin-top:0">Event Bus — MQTT Topics</h4>
+<pre><code># Spine publishes to structured topics. Product subscribes to what it needs.
+
+cvspine/{product_id}/{camera_id}/frame           → anonymized JPEG (QoS 0)
+cvspine/{product_id}/{camera_id}/detections       → detection JSON (QoS 0)
+cvspine/{product_id}/{camera_id}/pose             → keypoints JSON (QoS 0)
+cvspine/{product_id}/{camera_id}/reid             → ReID matches (QoS 1)
+cvspine/{product_id}/{camera_id}/line/{line_id}   → line crossing events (QoS 1)
+cvspine/{product_id}/{camera_id}/zone/{zone_id}   → zone events (QoS 1)
+cvspine/{product_id}/{camera_id}/face             → face recognition (QoS 1)
+cvspine/{product_id}/{camera_id}/alerts           → critical alerts (QoS 2)
+cvspine/{product_id}/{camera_id}/health           → camera/pipeline health (QoS 0)
+cvspine/{product_id}/analytics                    → aggregated stats (QoS 0)</code></pre>
+</div>
+
+<div class="card card-spine">
+<h4 style="margin-top:0">Database Schema (TimescaleDB)</h4>
+<pre><code>-- ═══ SPINE TABLES (shared) ═══
+
+-- Raw events (hypertable, auto-compressed after 7 days)
+CREATE TABLE spine_events (
+    time         TIMESTAMPTZ NOT NULL,
+    product_id   TEXT NOT NULL,
+    camera_id    TEXT NOT NULL,
+    event_type   TEXT NOT NULL,       -- person.detected, line.crossed, etc.
+    track_id     INTEGER,
+    data         JSONB NOT NULL,
+    PRIMARY KEY (time, product_id, camera_id, event_type)
+);
+SELECT create_hypertable('spine_events', 'time');
+
+-- Track sessions (one row per track lifecycle)
+CREATE TABLE track_sessions (
+    id           BIGSERIAL PRIMARY KEY,
+    product_id   TEXT NOT NULL,
+    camera_id    TEXT NOT NULL,
+    track_id     INTEGER NOT NULL,
+    first_seen   TIMESTAMPTZ NOT NULL,
+    last_seen    TIMESTAMPTZ NOT NULL,
+    duration_s   FLOAT,
+    entry_line   TEXT,
+    exit_line    TEXT,
+    reid_id      TEXT,               -- gallery match ID
+    path_summary JSONB,              -- compressed path
+    zones_visited TEXT[]
+);
+
+-- Occupancy snapshots (1-min aggregation)
+CREATE TABLE occupancy_snapshots (
+    time         TIMESTAMPTZ NOT NULL,
+    product_id   TEXT NOT NULL,
+    camera_id    TEXT NOT NULL,
+    zone_id      TEXT,
+    person_count INTEGER NOT NULL,
+    PRIMARY KEY (time, product_id, camera_id)
+);
+SELECT create_hypertable('occupancy_snapshots', 'time');
+
+-- ═══ VECTOR DB (Qdrant) ═══
+-- Collection: reid_embeddings
+--   vector: 512-dim float32
+--   payload: { product_id, gallery_id, person_name, enrolled_at, ttl }
+--
+-- Collection: scene_embeddings
+--   vector: 512-dim (CLIP)
+--   payload: { product_id, camera_id, timestamp, scene_labels }
+</code></pre>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 8. INFERENCE INFRASTRUCTURE -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s8">8. Inference Infrastructure</h2>
+
+<div class="card card-arch">
+<h4 style="margin-top:0">Option A: Embedded (Current VibeCheck Style)</h4>
+<pre><code># Models loaded in-process. Good for single-node, 1-10 cameras.
+# Simple but doesn't scale.
+
+cv-worker (Python process)
+├── YOLO model (GPU)
+├── Pose model (GPU)
+├── SCRFD (GPU)
+├── ReID model (GPU)
+└── Per-camera threads (CPU)
+
+Pros: Simple deploy, low latency (no network hop)
+Cons: Can't share GPU across nodes, OOM risk with many models
+Use for: HomeWatch (edge), small VibeCheck (1 venue)</code></pre>
+
+<h4>Option B: Triton Inference Server (Recommended for Scale)</h4>
+<pre><code># Models served by Triton. CV workers are thin clients.
+# Scales to 100+ cameras across multiple GPUs.
+
+┌─────────────────┐     gRPC      ┌──────────────────┐
+│  CV Worker 1    │──────────────→│  Triton Server   │
+│  (cameras 1-5)  │               │                  │
+├─────────────────┤               │  ┌────────────┐  │
+│  CV Worker 2    │──────────────→│  │ YOLO det   │  │
+│  (cameras 6-10) │               │  │ (TensorRT) │  │
+├─────────────────┤               │  ├────────────┤  │
+│  CV Worker 3    │──────────────→│  │ YOLO pose  │  │
+│  (cameras 11-15)│               │  │ (ONNX)     │  │
+└─────────────────┘               │  ├────────────┤  │
+                                  │  │ ArcFace    │  │
+                                  │  │ (TensorRT) │  │
+                                  │  ├────────────┤  │
+                                  │  │ SCRFD      │  │
+                                  │  │ (ONNX)     │  │
+                                  │  ├────────────┤  │
+                                  │  │ OSNet ReID │  │
+                                  │  │ (ONNX)     │  │
+                                  │  └────────────┘  │
+                                  │                  │
+                                  │  Dynamic Batching│
+                                  │  GPU Scheduling  │
+                                  │  Model Versioning│
+                                  └──────────────────┘
+
+Pros: Multi-GPU, dynamic batching, model hot-swap, built-in metrics
+Cons: Extra service to manage, network latency (~1-2ms)
+Use for: Multi-venue, multi-product production deployment</code></pre>
+</div>
+
+<div class="card card-green">
+<h4 style="margin-top:0">GPU Budget Calculator</h4>
+<table>
+<tr><th>Cameras</th><th>Modules Enabled</th><th>FPS</th><th>GPU Needed</th><th>Monthly Cost (Cloud)</th></tr>
+<tr><td>1-5</td><td>Detection + Tracking</td><td>10</td><td>T4 (16GB)</td><td>~$150</td></tr>
+<tr><td>5-15</td><td>Det + Pose + ReID</td><td>5</td><td>L4 (24GB)</td><td>~$350</td></tr>
+<tr><td>15-50</td><td>All 6 pillars</td><td>5</td><td>A100 (40GB) or 2x L4</td><td>~$800</td></tr>
+<tr><td>50-100</td><td>All 6 pillars</td><td>5</td><td>2x A100 + Triton</td><td>~$1,800</td></tr>
+<tr><td>Edge (1-3)</td><td>Det + Face</td><td>5</td><td>Jetson Orin Nano</td><td>$249 one-time</td></tr>
+</table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 9. DEPLOYMENT MODELS -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s9">9. Deployment Models</h2>
+
+<div class="grid-2">
+<div class="card card-spine">
+<h4 style="margin-top:0">Cloud-First (SaaS)</h4>
+<pre><code>Customer camera → RTSP over VPN → Cloud GPU
+                                   ↓
+                              CV Spine (K8s)
+                                   ↓
+                          Product API + Dashboard
+
+Best for: VibeCheck, RetailIQ
+Latency: 100-500ms (acceptable for analytics)
+Cost: Per-camera subscription
+Security: VPN tunnel for video feed</code></pre>
+</div>
+
+<div class="card card-spine">
+<h4 style="margin-top:0">Edge (On-Premises)</h4>
+<pre><code>Customer camera → Local Jetson/Server
+                      ↓
+                 CV Spine (Docker)
+                      ↓
+               Local Dashboard + Cloud Sync
+
+Best for: HomeWatch, Military, Schools
+Latency: <50ms (local inference)
+Cost: Hardware one-time
+Privacy: Video never leaves premises</code></pre>
+</div>
+
+<div class="card card-spine">
+<h4 style="margin-top:0">Hybrid</h4>
+<pre><code>Camera → Edge device (detection + anonymization)
+              ↓
+         Anonymized events → Cloud
+              ↓
+         Cloud analytics + dashboard
+
+Best for: Enterprise with privacy requirements
+Latency: Detection local (fast), analytics cloud
+Privacy: Raw video stays on-prem, only metadata goes cloud</code></pre>
+</div>
+
+<div class="card card-spine">
+<h4 style="margin-top:0">Multi-Tenant SaaS</h4>
+<pre><code>Product A (VibeCheck)  ──┐
+Product B (RetailIQ)   ──┤──→ Shared CV Spine Cluster
+Product C (SchoolGuard)──┘    (Kubernetes, GPU pool)
+                              ↓
+                         Per-product namespaces
+                         Per-product databases
+                         Shared inference (Triton)
+
+Most efficient at scale.
+Spine team maintains cluster.
+Product teams deploy adapters.</code></pre>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 10. PROJECT STRUCTURE -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s10">10. Project Structure & Repo Layout</h2>
+
+<pre><code>cv-spine/                              # Monorepo
+│
+├── spine/                             # THE SPINE (build once)
+│   ├── core/
+│   │   ├── orchestrator.py            # Frame router, module scheduler
+│   │   ├── event_bus.py               # MQTT + Redis pub/sub abstraction
+│   │   ├── config.py                  # Pydantic config schemas
+│   │   └── adapter.py                 # ProductAdapter ABC
+│   │
+│   ├── modules/                       # The 6 Pillars
+│   │   ├── detection/
+│   │   │   ├── detector.py            # YOLOv8/v10 wrapper
+│   │   │   ├── tracker.py            # ByteTrack / BoT-SORT
+│   │   │   └── models/               # Model weights (git-lfs or download script)
+│   │   ├── pose/
+│   │   │   ├── estimator.py           # YOLO-pose / ViTPose
+│   │   │   ├── activity.py            # Fall/dance/fight classifiers
+│   │   │   └── models/
+│   │   ├── reid/
+│   │   │   ├── embedder.py            # OSNet / FastReID
+│   │   │   ├── gallery.py             # Qdrant gallery manager
+│   │   │   └── models/
+│   │   ├── entry_exit/
+│   │   │   ├── line_crossing.py       # Line-of-regard detector
+│   │   │   ├── direction.py           # Entry vs exit classifier
+│   │   │   └── counter.py            # Occupancy counter
+│   │   ├── roi/
+│   │   │   ├── zone_manager.py        # Polygon zone engine
+│   │   │   ├── heatmap.py            # Density grid accumulator
+│   │   │   ├── spatial_recommend.py   # Flow analysis, dead zones
+│   │   │   └── homography.py         # Perspective transform
+│   │   └── face/
+│   │       ├── detector.py            # SCRFD
+│   │       ├── recognizer.py          # ArcFace
+│   │       ├── demographics.py        # MiVOLO age/gender
+│   │       ├── liveness.py            # Anti-spoofing
+│   │       └── models/
+│   │
+│   ├── utils/
+│   │   ├── frame_grabber.py           # Multi-protocol video ingest
+│   │   ├── anonymizer.py             # Privacy-first frame processing
+│   │   ├── frame_dedup.py            # pHash deduplication
+│   │   ├── gpu_scheduler.py          # GPU memory + batch management
+│   │   ├── model_registry.py         # Model loading, versioning
+│   │   ├── metrics.py                # Prometheus metrics
+│   │   └── health.py                 # Health check endpoints
+│   │
+│   ├── infra/
+│   │   ├── docker-compose.yml         # Spine infrastructure
+│   │   ├── triton/                    # Triton model repository
+│   │   ├── mosquitto/                 # MQTT broker config
+│   │   └── k8s/                       # Kubernetes manifests
+│   │
+│   └── tests/
+│       ├── test_detection.py
+│       ├── test_tracking.py
+│       ├── test_reid.py
+│       ├── test_zones.py
+│       ├── test_line_crossing.py
+│       └── test_integration.py
+│
+├── products/                          # PRODUCT LAYERS (per vertical)
+│   │
+│   ├── vibecheck/
+│   │   ├── adapter.py                 # VibeCheckAdapter(ProductAdapter)
+│   │   ├── vibe_engine.py            # Vibe label rules
+│   │   ├── api/                       # FastAPI routes
+│   │   ├── dashboard/                 # Web frontend
+│   │   └── config/
+│   │       └── venues.yaml            # Venue-specific camera + zone configs
+│   │
+│   ├── schoolguard/
+│   │   ├── adapter.py                 # SchoolGuardAdapter(ProductAdapter)
+│   │   ├── attendance.py             # Face → student DB
+│   │   ├── safety_rules.py           # Fight/intrusion alert logic
+│   │   ├── api/
+│   │   └── config/
+│   │       └── schools.yaml
+│   │
+│   ├── perimeterai/
+│   │   ├── adapter.py
+│   │   ├── breach_detector.py
+│   │   ├── watchlist.py
+│   │   └── config/
+│   │
+│   └── homewatch/
+│       ├── adapter.py
+│       ├── notification.py
+│       ├── edge_deploy/               # Jetson/RPi specific
+│       └── config/
+│
+├── sdk/                               # CLIENT SDK (optional)
+│   ├── python/                        # pip install cv-spine-sdk
+│   └── javascript/                    # npm install @cv-spine/sdk
+│
+└── docs/
+    ├── architecture.md
+    ├── adding-a-product.md            # "How to build on CV Spine"
+    ├── adding-a-module.md
+    └── deployment.md</code></pre>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 11. BUILD SEQUENCE -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s11">11. Build Sequence — What to Build First</h2>
+
+<h3>Phase 1: Core Spine (Weeks 1-6)</h3>
+<div class="card card-spine">
+<div class="pipeline-step"><div class="step-num">1</div><div class="step-text"><strong>Frame Grabber + Orchestrator</strong> — multi-camera ingest, frame routing, module lifecycle. <em>This is foundation. Nothing works without it.</em></div></div>
+<div class="pipeline-step"><div class="step-num">2</div><div class="step-text"><strong>Person Detection module</strong> — YOLOv8m, configurable confidence/size/classes. Output contract finalized.</div></div>
+<div class="pipeline-step"><div class="step-num">3</div><div class="step-text"><strong>ByteTrack integration</strong> — multi-object tracking with track lifecycle events (created, updated, lost).</div></div>
+<div class="pipeline-step"><div class="step-num">4</div><div class="step-text"><strong>Event Bus</strong> — MQTT topics structure, Redis pub/sub, event schema (Pydantic models).</div></div>
+<div class="pipeline-step"><div class="step-num">5</div><div class="step-text"><strong>ProductAdapter ABC</strong> — interface definition, config schemas, on_event contract.</div></div>
+<div class="pipeline-step"><div class="step-num">6</div><div class="step-text"><strong>Anonymizer</strong> — SCRFD face detection + blur. Runs before any frame leaves spine.</div></div>
+<p style="margin-top:12px"><strong>Deliverable:</strong> Spine detects + tracks people on N cameras, publishes events. VibeCheck can be rebuilt on top as first product.</p>
+</div>
+
+<h3>Phase 2: Spatial Intelligence (Weeks 6-10)</h3>
+<div class="card card-product">
+<div class="pipeline-step"><div class="step-num">7</div><div class="step-text"><strong>ROI Zone Manager</strong> — polygon zones, enter/exit detection, zone occupancy counting.</div></div>
+<div class="pipeline-step"><div class="step-num">8</div><div class="step-text"><strong>Entry/Exit Lines</strong> — line crossing detection, direction classification, occupancy counters.</div></div>
+<div class="pipeline-step"><div class="step-num">9</div><div class="step-text"><strong>Heatmap + Spatial Recommendations</strong> — density grid, flow analysis, dead zone detection.</div></div>
+<div class="pipeline-step"><div class="step-num">10</div><div class="step-text"><strong>TimescaleDB integration</strong> — event persistence, occupancy time-series, aggregation.</div></div>
+<p style="margin-top:12px"><strong>Deliverable:</strong> Spine understands WHERE people are, not just that they exist. RetailIQ becomes buildable.</p>
+</div>
+
+<h3>Phase 3: Identity & Pose (Weeks 10-16)</h3>
+<div class="card card-model">
+<div class="pipeline-step"><div class="step-num">11</div><div class="step-text"><strong>Pose Keypoints module</strong> — YOLOv8m-pose, activity classifiers (fall, dance, fight).</div></div>
+<div class="pipeline-step"><div class="step-num">12</div><div class="step-text"><strong>Body ReID module</strong> — OSNet embeddings, Qdrant gallery, cross-camera matching.</div></div>
+<div class="pipeline-step"><div class="step-num">13</div><div class="step-text"><strong>Face Recognition module</strong> — SCRFD + ArcFace, gallery management, privacy controls.</div></div>
+<div class="pipeline-step"><div class="step-num">14</div><div class="step-text"><strong>GPU Scheduler + Triton</strong> — multi-model batching, dynamic scheduling, model registry.</div></div>
+<p style="margin-top:12px"><strong>Deliverable:</strong> Full spine operational. SchoolGuard, PerimeterAI, HomeWatch all buildable.</p>
+</div>
+
+<h3>Phase 4: Scale & Polish (Weeks 16-20)</h3>
+<div class="card card-green">
+<div class="pipeline-step"><div class="step-num">15</div><div class="step-text"><strong>Frame Deduplication</strong> — pHash, skip inference on static scenes.</div></div>
+<div class="pipeline-step"><div class="step-num">16</div><div class="step-text"><strong>Observability</strong> — Prometheus metrics, OpenTelemetry, Grafana dashboards.</div></div>
+<div class="pipeline-step"><div class="step-num">17</div><div class="step-text"><strong>Kubernetes manifests</strong> — Helm charts, HPA, GPU scheduling, multi-tenant.</div></div>
+<div class="pipeline-step"><div class="step-num">18</div><div class="step-text"><strong>SDK</strong> — Python + JS client libraries for product teams.</div></div>
+<div class="pipeline-step"><div class="step-num">19</div><div class="step-text"><strong>Edge deployment</strong> — Jetson/RPi optimized builds, ONNX/TensorRT export.</div></div>
+<p style="margin-top:12px"><strong>Deliverable:</strong> Production-grade spine. Products deploy independently. Edge + cloud.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- 12. EFFORT ESTIMATE -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s12">12. Effort Estimate & Team</h2>
+
+<div class="card card-warn">
+<h4 style="margin-top:0">Solo Developer Reality Check</h4>
+<p>If you build this alone, here's realistic timeline:</p>
+<table>
+<tr><th>Component</th><th>Effort (Solo)</th><th>Priority</th></tr>
+<tr><td>Frame Grabber + Orchestrator</td><td>2 weeks</td><td><span class="badge badge-critical">P0</span></td></tr>
+<tr><td>Person Detection + Tracking</td><td>2 weeks</td><td><span class="badge badge-critical">P0</span></td></tr>
+<tr><td>Event Bus + Adapter Interface</td><td>1 week</td><td><span class="badge badge-critical">P0</span></td></tr>
+<tr><td>Anonymizer (SCRFD)</td><td>3 days</td><td><span class="badge badge-critical">P0</span></td></tr>
+<tr><td>ROI Zones + Entry/Exit</td><td>2 weeks</td><td><span class="badge badge-critical">P0</span></td></tr>
+<tr><td>Heatmap + Spatial</td><td>1 week</td><td>P1</td></tr>
+<tr><td>Pose Keypoints + Activity</td><td>2 weeks</td><td>P1</td></tr>
+<tr><td>Body ReID</td><td>2 weeks</td><td>P1</td></tr>
+<tr><td>Face Recognition</td><td>2 weeks</td><td>P2</td></tr>
+<tr><td>TimescaleDB + Persistence</td><td>1 week</td><td>P1</td></tr>
+<tr><td>Triton Integration</td><td>2 weeks</td><td>P2</td></tr>
+<tr><td>Tests + CI/CD</td><td>2 weeks</td><td>P1</td></tr>
+<tr><td>K8s + Edge Deploy</td><td>2 weeks</td><td>P2</td></tr>
+<tr><td><strong>TOTAL SPINE</strong></td><td><strong>~20 weeks (5 months)</strong></td><td></td></tr>
+<tr><td>First product (VibeCheck v2)</td><td>+3 weeks</td><td></td></tr>
+<tr><td>Each additional product</td><td>+2-3 weeks</td><td></td></tr>
+</table>
+<p><strong>Key insight</strong>: After spine done, each new product = 2-3 weeks. That's payback. Without spine, each product = 3-4 months. 5th product on spine saves you a full year.</p>
+</div>
+
+<div class="card card-green">
+<h4 style="margin-top:0">Quick-Start Strategy</h4>
+<p>Don't build all 6 pillars before shipping. Minimum viable spine:</p>
+<ol>
+  <li><strong>Detection + Tracking + Zones + Event Bus + Adapter</strong> = 5 weeks</li>
+  <li><strong>Rebuild VibeCheck on spine</strong> = 2 weeks</li>
+  <li><strong>Ship VibeCheck v2</strong> — prove spine works</li>
+  <li>Add pillars incrementally as products need them</li>
+</ol>
+<p>First product funds next pillar. Spine grows with revenue.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- FOOTER -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<hr style="border-color:var(--border);margin:60px 0 30px">
+
+<div style="text-align:center;color:var(--text-muted);font-size:0.85rem">
+<p style="font-size:1.1rem;color:var(--accent)"><strong>Build the spine. Own the platform. Stamp products forever.</strong></p>
+<p>CV Spine Architecture — Designed 2026-05-24</p>
+<p>6 Pillars | Infinite Products | One Codebase</p>
+</div>
+
+</div>
+</body>
+</html>
